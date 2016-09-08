@@ -1,13 +1,13 @@
 #!/bin/bash
 vpk_prompt() { yad --image "dialog-question" --title "VPK Installer" --button=Select:1 --button=Cancel:2 --text "Please select the VPK you wish to shrink and transfer to the Vita system"; RET=$?; }
 selected_vpk() { yad --file; }
-vpk_extract() { unzip $1 -d vpk_extracted/; }
-vpk_repackage() { cd vpk_extracted/; zip -r install.vpk eboot.bin sce_sys/; }
+vpk_extract() { unzip $1 -d vpk_extracted/ 2>&1 | yad --text-info --title "Extracting main VPK" --width 600 --height 300 --tail; }
+vpk_repackage() { cd vpk_extracted/; zip -r install.vpk eboot.bin sce_sys/ 2>&1 | yad --text-info --title "Packaging files into install.vpk" --width 600 --height 300 --tail; }
 vita_select() { yad --entry --title="VPK Installer" --text="Enter IP of Vita:" --entry-text "0.0.0.0"; }
-vpk_transfer() { ncftpput -P 1337 $1 "ux0:/Vpk/" install.vpk; }
+vpk_transfer() { ncftpput -P 1337 $1 "ux0:/Vpk/" install.vpk 2>&1 | yad --text-info --title "Copying small install.vpk" --width 600 --height 300 --tail; }
 transfer_prompt() { yad --title "VPK Installer" --button=Continue:1 --button=Cancel:2 --text "Small VPK should now be at ux0:/Vpk/install.vpk. Please use VitaShell to install this file and press continue AFTER it finishes. Put Vita back into FTP mode before continuing."; RET=$?; }
 title_id() { echo $vpk_path | xargs -L 1 basename | cut -d "_" -f 1; }
-data_transfer() { ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" data; ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" sce_module; }
+data_transfer() { ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" data 2>&1 | yad --text-info --title "Copying data folder" --width 600 --height 300 --tail; ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" sce_module 2>&1 | yad --text-info --title "Coping sce_module folder" --width 600 --height 300 --tail; }
 
 vpk_prompt
 if [[ $RET == 1 ]]; then
