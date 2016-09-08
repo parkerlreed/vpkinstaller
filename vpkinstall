@@ -5,13 +5,23 @@ vpk_extract() { unzip $1 -d vpk_extracted/; }
 vpk_repackage() { cd vpk_extracted/; zip -r install.vpk eboot.bin sce_sys/; }
 vita_select() { yad --entry --title="VPK Installer" --text="Enter IP of Vita:" --entry-text "0.0.0.0"; }
 vpk_transfer() { ncftpput -P 1337 $1 "ux0:/Vpk/" install.vpk; }
-
+transfer_prompt() { yad --title "VPK Installer" --button=Continue:1 --button=Cancel:2 --text "Small VPK should now be at ux0:/Vpk/install.vpk. Please use VitaShell to install this file and press continue AFTER it finishes. Put Vita back into FTP mode before continuing."; RET=$?; }
+title_id() { echo $vpk_path | xargs -L 1 basename | cut -d "_" -f 1; }
+data_transfer() { ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" data; ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" sce_module; }
 
 vpk_prompt
 if [[ $RET == 1 ]]; then
-	vpk_extract $(selected_vpk)
+	vpk_path=$(selected_vpk)
+	vpk_extract "$vpk_path"
 	vpk_repackage
-	vpk_transfer $(vita_select)
+	vita_ip="$(vita_select)"
+	vpk_transfer "$vita_ip"
+	transfer_prompt
+	if [[ $RET == 1 ]]; then
+		data_transfer "$vita_ip"
+	else
+		exit
+	fi
 else
 	exit
 fi
