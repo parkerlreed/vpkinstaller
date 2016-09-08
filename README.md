@@ -7,6 +7,8 @@ yad (zenity drop-in replacement) is used by default but the references can also 
 
 ~~For now launch from a terminal window (Haven't figured out a way to get the stdout displayed in yad in real time)~~ Implemented!
 
+This assumes your initial VPK is named with these conventions: <titleid>_FULLGAME_01.00.VPK
+
 ![Prompt](http://i.imgur.com/TnJEnL6.png)
 
 ![File selection](http://i.imgur.com/gQUFLK6.png)
