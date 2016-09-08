@@ -1,9 +1,18 @@
 #!/bin/bash
-vpk_prompt() { yad --image "dialog-question" --title "VPK Installer" --button=Select:1 --button=Cancel:2 --text "Please select the VPK you wish to shrink and transfer to the Vita system"; }
+vpk_prompt() { yad --image "dialog-question" --title "VPK Installer" --button=Select:1 --button=Cancel:2 --text "Please select the VPK you wish to shrink and transfer to the Vita system"; RET=$?; }
 selected_vpk() { yad --file; }
 vpk_extract() { unzip $1 -d vpk_extracted/; }
 vpk_repackage() { cd vpk_extracted/; zip -r install.vpk eboot.bin sce_sys/; }
+vita_select() { yad --entry --title="VPK Installer" --text="Enter IP of Vita:" --entry-text "0.0.0.0"; }
+vpk_transfer() { ncftpput -P 1337 $1 "ux0:/Vpk/" install.vpk; }
+
 
 vpk_prompt
-vpk_extract $(selected_vpk)
-vpk_repackage
+if [[ $RET == 1 ]]; then
+	vpk_extract $(selected_vpk)
+	vpk_repackage
+	vpk_transfer $(vita_select)
+else
+	exit
+fi
+
