@@ -1,0 +1,9 @@
+#!/bin/bash
+vpk_prompt() { yad --image "dialog-question" --title "VPK Installer" --button=Select:1 --button=Cancel:2 --text "Please select the VPK you wish to shrink and transfer to the Vita system"; }
+selected_vpk() { yad --file; }
+vpk_extract() { unzip $1 -d vpk_extracted/; }
+vpk_repackage() { cd vpk_extracted/; zip -r install.vpk eboot.bin sce_sys/; }
+
+vpk_prompt
+vpk_extract $(selected_vpk)
+vpk_repackage
