@@ -1,28 +1,29 @@
 #!/bin/bash
 vpk_prompt() { yad --image "dialog-question" --title "VPK Installer" --button=Select:1 --button=Cancel:2 --text "Please select the VPK you wish to shrink and transfer to the Vita system"; RET=$?; }
 selected_vpk() { yad --file; }
-vpk_extract() { unzip $1 -d vpk_extracted/ 2>&1 | yad --text-info --title "Extracting main VPK" --width 600 --height 300 --tail; }
-vpk_repackage() { cd vpk_extracted/; zip -r install.vpk eboot.bin sce_sys/ 2>&1 | yad --text-info --title "Packaging files into install.vpk" --width 600 --height 300 --tail; }
+vpk_extract() { unzip $1 -d vpk_extracted/; done_msg; }
+vpk_repackage() { cd vpk_extracted/; zip -r install.vpk eboot.bin sce_sys/; done_msg; }
 vita_select() { yad --entry --title="VPK Installer" --text="Enter IP of Vita:" --entry-text "0.0.0.0"; }
-vpk_transfer() { ncftpput -P 1337 $1 "ux0:/Vpk/" install.vpk 2>&1 | yad --text-info --title "Copying small install.vpk" --width 600 --height 300 --tail; }
+vpk_transfer() { ncftpput -P 1337 $1 "ux0:/Vpk/" vpk_extracted/install.vpk; done_msg; }
 transfer_prompt() { yad --title "VPK Installer" --button=Continue:1 --button=Cancel:2 --text "Small VPK should now be at ux0:/Vpk/install.vpk. Please use VitaShell to install this file and press continue AFTER it finishes. Put Vita back into FTP mode before continuing."; RET=$?; }
 title_id() { echo $vpk_path | xargs -L 1 basename | cut -d "_" -f 1; }
-data_transfer() { ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" data 2>&1 | yad --text-info --title "Copying data folder" --width 600 --height 300 --tail; ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" sce_module 2>&1 | yad --text-info --title "Coping sce_module folder" --width 600 --height 300 --tail; }
+data_transfer() { ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" vpk_extracted/data; ncftpput -R -P 1337 $1 "ux0:/app/$(title_id)" vpk_extracted/sce_module; done_msg; }
+stdout_dialog() { yad --text-info --title "$1" --width 600 --height 300 --tail; }
+done_msg() { echo "Done, please press ok!"; }
 
 vpk_prompt
 if [[ $RET == 1 ]]; then
 	vpk_path=$(selected_vpk)
-	vpk_extract "$vpk_path"
-	vpk_repackage
+	vpk_extract "$vpk_path" 2>&1 | stdout_dialog "Extracting large VPK"
+	vpk_repackage 2>&1 | stdout_dialog "Packing executable and sce_sys/ into install.vpk"
 	vita_ip="$(vita_select)"
-	vpk_transfer "$vita_ip"
+	vpk_transfer "$vita_ip" 2>&1 | stdout_dialog "Copying install.vpk to Vita via FTP"
 	transfer_prompt
 	if [[ $RET == 1 ]]; then
-		data_transfer "$vita_ip"
+		data_transfer "$vita_ip" 2>&1 | stdout_dialog "Transferring rest of data to vita via FTP"
 	else
 		exit
 	fi
 else
 	exit
 fi
-
